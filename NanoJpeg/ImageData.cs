@@ -11,7 +11,7 @@ namespace NanoJpeg
             get { return Data[Position + index]; }
         }
 
-        public readonly Span<byte> Data;
+        public byte[] Data;
         public int Position;
         public int Remaining;
 
@@ -27,13 +27,6 @@ namespace NanoJpeg
         {
             if (data == null) { throw new ArgumentNullException(nameof(data)); }
 
-            Data = data.AsSpan();
-            Remaining = data.Length;
-        }
-
-        public ImageData(Span<byte> data)
-            : this()
-        {
             Data = data;
             Remaining = data.Length;
         }
@@ -41,7 +34,7 @@ namespace NanoJpeg
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Span<byte> Slice(int offset, int length)
         {
-            return Data.Slice(Position + offset, length);
+            return new Span<byte>(Data, Position + offset, length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

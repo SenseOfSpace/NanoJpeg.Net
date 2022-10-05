@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Numerics;
+using UnityEngine;
 
 namespace NanoJpeg
 {
@@ -7,6 +7,8 @@ namespace NanoJpeg
     {
         private static readonly Vector3 VecCb = new Vector3(-88, 0, 454);
         private static readonly Vector3 VecCr = new Vector3(-183, 359, 0);
+        private static readonly Vector3 Vector3One = new Vector3(1, 1, 1);
+        private static readonly Vector4 Vector4One = new Vector4(1, 1, 1, 1);
 
         private void ConvertYcc(ref ImageData data, bool flip)
         {
@@ -29,10 +31,10 @@ namespace NanoJpeg
             {
                 Data = new byte[w * h * 3];
 
-                var prgb = Data.AsSpan();
-                var py = channels[0].Pixels.AsSpan();
-                var pcb = channels[1].Pixels.AsSpan();
-                var pcr = channels[2].Pixels.AsSpan();
+                var prgb = Data;
+                var py = channels[0].Pixels;
+                var pcb = channels[1].Pixels;
+                var pcr = channels[2].Pixels;
 
                 int rs = channels[0].Stride - w;
                 int gs = channels[1].Stride - w;
@@ -100,8 +102,8 @@ namespace NanoJpeg
         {
             int xmax = c.Width - 3;
             byte[] outdata = new byte[(c.Width * c.Height) << 1];
-            var lin = c.Pixels.AsSpan();
-            var lout = outdata.AsSpan();
+            var lin = c.Pixels;
+            var lout = outdata;
 
             int linidx = 0;
             int loutidx = 0;
@@ -109,26 +111,26 @@ namespace NanoJpeg
             for (int y = c.Height; y != 0; --y)
             {
                 var iv1 = new Vector3(lin[linidx], lin[linidx + 1], lin[linidx + 2]);
-                lout[loutidx] = CF((int)Vector3.Dot(iv1 * CF2AB, Vector3.One));
-                lout[loutidx + 1] = CF((int)Vector3.Dot(iv1 * CF3XYZ, Vector3.One));
-                lout[loutidx + 2] = CF((int)Vector3.Dot(iv1 * CF3ABC, Vector3.One));
+                lout[loutidx] = CF((int)Vector3.Dot(Multiply(iv1, CF2AB), Vector3One));
+                lout[loutidx + 1] = CF((int)Vector3.Dot(Multiply(iv1, CF3XYZ), Vector3One));
+                lout[loutidx + 2] = CF((int)Vector3.Dot(Multiply(iv1, CF3ABC), Vector3One));
 
                 for (int x = 0; x < xmax; ++x)
                 {
                     int tin = linidx + x;
                     int tout = loutidx + (x << 1);
                     var iv2 = new Vector4(lin[tin], lin[tin + 1], lin[tin + 2], lin[tin + 3]);
-                    lout[tout + 3] = CF((int)Vector4.Dot(iv2 * CF4ABCD, Vector4.One));
-                    lout[tout + 4] = CF((int)Vector4.Dot(iv2 * CF4DCBA, Vector4.One));
+                    lout[tout + 3] = CF((int)Vector4.Dot(Multiply(iv2, CF4ABCD), Vector4One));
+                    lout[tout + 4] = CF((int)Vector4.Dot(Multiply(iv2, CF4DCBA), Vector4One));
                 }
 
                 linidx += c.Stride;
                 loutidx += c.Width << 1;
 
                 var iv3 = new Vector3(lin[linidx - 1], lin[linidx - 2], lin[linidx - 3]);
-                lout[loutidx - 1] = CF((int)Vector3.Dot(iv3 * CF3ABC, Vector3.One));
-                lout[loutidx - 2] = CF((int)Vector3.Dot(iv3 * CF3XYZ, Vector3.One));
-                lout[loutidx - 3] = CF((int)Vector3.Dot(iv3 * CF2AB, Vector3.One));
+                lout[loutidx - 1] = CF((int)Vector3.Dot(Multiply(iv3, CF3ABC), Vector3One));
+                lout[loutidx - 2] = CF((int)Vector3.Dot(Multiply(iv3, CF3XYZ), Vector3One));
+                lout[loutidx - 3] = CF((int)Vector3.Dot(Multiply(iv3, CF2AB), Vector3One));
             }
 
             c.Width <<= 1;
@@ -140,8 +142,8 @@ namespace NanoJpeg
         {
             int w = c.Width, s1 = c.Stride, s2 = s1 + s1;
             byte[] outdata = new byte[(c.Width * c.Height) << 1];
-            var cout = outdata.AsSpan();
-            var cin = c.Pixels.AsSpan();
+            var cout = outdata;
+            var cin = c.Pixels;
 
             for (int x = 0; x < w; ++x)
             {
@@ -149,24 +151,24 @@ namespace NanoJpeg
                 int inidx = x;
 
                 var iv1 = new Vector3(cin[inidx], cin[inidx + s1], cin[inidx + s2]);
-                cout[outidx] = CF((int)Vector3.Dot(iv1 * CF2AB, Vector3.One)); outidx += w;
-                cout[outidx] = CF((int)Vector3.Dot(iv1 * CF3XYZ, Vector3.One)); outidx += w;
-                cout[outidx] = CF((int)Vector3.Dot(iv1 * CF3ABC, Vector3.One)); outidx += w;
+                cout[outidx] = CF((int)Vector3.Dot(Multiply(iv1, CF2AB), Vector3One)); outidx += w;
+                cout[outidx] = CF((int)Vector3.Dot(Multiply(iv1, CF3XYZ), Vector3One)); outidx += w;
+                cout[outidx] = CF((int)Vector3.Dot(Multiply(iv1, CF3ABC), Vector3One)); outidx += w;
                 inidx += s1;
 
                 for (int y = c.Height - 3; y != 0; --y)
                 {
                     var iv2 = new Vector4(cin[inidx - s1], cin[inidx], cin[inidx + s1], cin[inidx + s2]);
-                    cout[outidx] = CF((int)Vector4.Dot(iv2 * CF4ABCD, Vector4.One)); outidx += w;
-                    cout[outidx] = CF((int)Vector4.Dot(iv2 * CF4DCBA, Vector4.One)); outidx += w;
+                    cout[outidx] = CF((int)Vector4.Dot(Multiply(iv2, CF4ABCD), Vector4One)); outidx += w;
+                    cout[outidx] = CF((int)Vector4.Dot(Multiply(iv2, CF4DCBA), Vector4One)); outidx += w;
                     inidx += s1;
                 }
 
                 inidx += s1;
                 var iv3 = new Vector3(cin[inidx], cin[inidx - s1], cin[inidx - s2]);
-                cout[outidx] = CF((int)Vector3.Dot(iv3 * CF3ABC, Vector3.One)); outidx += w;
-                cout[outidx] = CF((int)Vector3.Dot(iv3 * CF3XYZ, Vector3.One)); outidx += w;
-                cout[outidx] = CF((int)Vector3.Dot(iv3 * CF2AB, Vector3.One));
+                cout[outidx] = CF((int)Vector3.Dot(Multiply(iv3, CF3ABC), Vector3One)); outidx += w;
+                cout[outidx] = CF((int)Vector3.Dot(Multiply(iv3, CF3XYZ), Vector3One)); outidx += w;
+                cout[outidx] = CF((int)Vector3.Dot(Multiply(iv3, CF2AB), Vector3One));
             }
 
             c.Height <<= 1;

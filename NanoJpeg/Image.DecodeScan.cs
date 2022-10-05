@@ -77,7 +77,7 @@ namespace NanoJpeg
 
             decodeData.ClearBlock();
 
-            var outv = channel.Pixels.AsSpan(pixelIndex);
+            var outv = new Span<byte>(channel.Pixels, pixelIndex);
             var huffman = decodeData.HuffmanTables;
             byte[][] quantization = decodeData.QuantizationTables;
             int[] block = decodeData.Block;
@@ -98,8 +98,8 @@ namespace NanoJpeg
                 block[njZZ[coef]] = value * quantization[channel.Qtsel][coef];
             } while (coef < 63);
 
-            for (int i = 0; i < 64; i += 8) { RowIdct(block.AsSpan(i)); }
-            for (int i = 0; i < 8; ++i) { ColumnIdct(block.AsSpan(i), outv.Slice(i), channel.Stride); }
+            for (int i = 0; i < 64; i += 8) { RowIdct(new Span<int>(block, i)); }
+            for (int i = 0; i < 8; ++i) { ColumnIdct(new Span<int>(block, i), outv.Slice(i), channel.Stride); }
         }
 
         private int GetVlc(ref ImageData data, VlcCode[] vlc, ref byte code)

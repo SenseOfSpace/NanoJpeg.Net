@@ -76,7 +76,8 @@ namespace NanoJpeg
 
         private void DecodeHuffmanTables(ref ImageData data, DecodeData decodeData)
         {
-            Span<byte> counts = stackalloc byte[16];
+            byte[] countsArray = new byte[16];
+            Span<byte> counts = new Span<byte>(countsArray);
             int length = DecodeLength(ref data);
             int remain, spread;
 

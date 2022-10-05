@@ -1,5 +1,5 @@
-﻿using System.Buffers.Binary;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
+using UnityEngine;
 
 namespace NanoJpeg
 {
@@ -23,6 +23,25 @@ namespace NanoJpeg
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Vector3 Multiply(Vector3 a, Vector3 b)
+        {
+            return new Vector3(
+                a.x * b.x,
+                a.y * b.y,
+                a.z * b.z);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Vector4 Multiply(Vector4 a, Vector4 b)
+        {
+            return new Vector4(
+                a.x * b.x,
+                a.y * b.y,
+                a.z * b.z,
+                a.w * b.w);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ushort Decode16(ref ImageData data)
         {
             return Decode16(ref data, 0);
@@ -31,7 +50,11 @@ namespace NanoJpeg
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ushort Decode16(ref ImageData data, int offset)
         {
-            return BinaryPrimitives.ReadUInt16BigEndian(data.Slice(offset, 2));
+            var bytes = data.Slice(offset, 2);
+            ushort a = bytes[0];
+            a <<= 8;
+            a |= bytes[1];
+            return a;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
